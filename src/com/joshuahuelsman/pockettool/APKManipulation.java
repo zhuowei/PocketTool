@@ -35,6 +35,7 @@ public class APKManipulation {
 	public final static File ptdir = new File(Environment.getExternalStorageDirectory(),
 			"/Android/data/com.joshuahuelsman.pockettool/");
 	private static Activity main;
+	public static boolean useRoot = true;
 	public APKManipulation(Activity maina) {
 		//zipu = new ZipUtils();
 		main = maina;
@@ -204,7 +205,7 @@ public class APKManipulation {
 			} else {
 				if (applications.get(n).publicSourceDir
 						.contains("com.mojang.minecraftpe-")) {
-					MINECRAFT_APK_PATH = applications.get(n).publicSourceDir;
+					MINECRAFT_APK_PATH = applications.get(n).sourceDir;
 					//minever = 0;
 					return true;
 				}
@@ -249,6 +250,15 @@ public class APKManipulation {
 
 	public static void backup(String apk) throws IOException {
 		File napk = new File(ptdir, "minecraft.apk");
-		copy(apk, napk.getAbsolutePath());
+		if (!useRoot) {
+			copy(apk, napk.getAbsolutePath());
+		} else {
+			String absPath = napk.getAbsolutePath();
+			try {
+				Runtime.getRuntime().exec("su -c \"cp " + apk + " " + absPath + "\"").waitFor();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

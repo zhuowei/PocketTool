@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.net.Uri;
 import android.os.Environment;
+import android.util.*;
 
 public class APKManipulation {
 	private static String MINECRAFT_APK_PATH;
@@ -205,7 +206,9 @@ public class APKManipulation {
 			} else {
 				if (applications.get(n).publicSourceDir
 						.contains("com.mojang.minecraftpe-")) {
-					MINECRAFT_APK_PATH = applications.get(n).sourceDir;
+					ApplicationInfo appInfo = applications.get(n);
+					MINECRAFT_APK_PATH = appInfo.sourceDir;
+					useRoot = !appInfo.publicSourceDir.equals(appInfo.sourceDir);
 					//minever = 0;
 					return true;
 				}
@@ -253,9 +256,12 @@ public class APKManipulation {
 		if (!useRoot) {
 			copy(apk, napk.getAbsolutePath());
 		} else {
-			String absPath = napk.getAbsolutePath();
+			//For some reason, Android 4.2's multiuser shared storage emulation implodes when app is running as root
+			//so we'll use the legacy /sdcard folder
+			napk = new File("/sdcard/Android/data/com.joshuahuelsman.pockettool/minecraft.apk");
 			try {
-				Runtime.getRuntime().exec("su -c \"cp " + apk + " " + absPath + "\"").waitFor();
+				Runtime.getRuntime().exec("su -c cp " + apk + " " + napk.getAbsolutePath()).waitFor();
+				//TODO follow http://su.chainfire.eu/ and stop using su -c
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
